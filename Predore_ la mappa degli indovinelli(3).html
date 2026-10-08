@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Predore: la mappa degli indovinelli</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;800&family=Instrument+Sans:wght@400;600&display=swap">
+<style>
+:root{--bg:#EEF3F2;--ink:#17323B;--muted:#58707A;--lake:#9CC7D2;--lake2:#7DB2C1;--hill:#CBD8B8;--hill2:#B5C79D;--card:#FFFFFF;--line:#C5D3D6;--accent:#12485A;--gold:#E3A72F;--ok:#2F7D4F;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1F25;--ink:#E4EEF0;--muted:#92A9B1;--lake:#1E4A5A;--lake2:#265B6D;--hill:#2A3A2B;--hill2:#33472F;--card:#16303A;--line:#2B4852;--accent:#8CD0E3;--gold:#F0BB4A;--ok:#6CC58D}}
+:root[data-theme="dark"]{--bg:#0F1F25;--ink:#E4EEF0;--muted:#92A9B1;--lake:#1E4A5A;--lake2:#265B6D;--hill:#2A3A2B;--hill2:#33472F;--card:#16303A;--line:#2B4852;--accent:#8CD0E3;--gold:#F0BB4A;--ok:#6CC58D}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 "Instrument Sans",system-ui,sans-serif}
+header{padding:22px 20px 8px;max-width:1100px;margin:0 auto}
+h1{font:800 clamp(1.8rem,5vw,2.8rem)/1.05 Fraunces,Georgia,serif;margin:0 0 6px}
+header p{margin:0;color:var(--muted);max-width:60ch}
+main{max-width:1100px;margin:0 auto;padding:12px 20px 32px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px}
+@media(max-width:800px){main{grid-template-columns:1fr}}
+.map{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+svg{display:block;width:100%;height:auto}
+.lake{fill:var(--lake)}.wave{fill:none;stroke:var(--lake2);stroke-width:2}
+.hill{fill:var(--hill)}.contour{fill:none;stroke:var(--hill2);stroke-width:2}
+.shore{fill:none;stroke:var(--accent);stroke-width:2.5}
+.steps{fill:none;stroke:var(--muted);stroke-width:2.5;stroke-dasharray:2 5;stroke-linecap:round}
+.lbl{fill:var(--muted);font:600 13px "Instrument Sans",sans-serif}
+.lbl.big{font:600 italic 16px Fraunces,Georgia,serif}
+.pin{cursor:pointer;outline:none}
+.pin circle.b{fill:var(--gold);stroke:var(--ink);stroke-width:2.5;transition:r .15s}
+.pin text{font:800 17px Fraunces,Georgia,serif;fill:#17323B;text-anchor:middle;pointer-events:none}
+.pin:hover circle.b,.pin:focus-visible circle.b,.pin.sel circle.b{r:19}
+.pin:focus-visible .ring,.pin.sel .ring{stroke:var(--accent)}
+.ring{fill:none;stroke:transparent;stroke-width:3}
+.pin.done circle.b{fill:var(--ok)}.pin.done text{fill:#fff}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;align-self:start}
+.score{font-weight:600;color:var(--accent);margin:0 0 12px}
+.panel h2{font:800 1.5rem/1.15 Fraunces,Georgia,serif;margin:0 0 10px}
+.riddle{font:600 1.1rem/1.5 Fraunces,Georgia,serif;margin:0 0 16px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+input{flex:1 1 160px;min-width:0;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button{padding:10px 14px;border-radius:8px;border:1.5px solid var(--accent);background:var(--accent);color:var(--bg);font:600 1rem "Instrument Sans",sans-serif;cursor:pointer}
+button.ghost{background:transparent;color:var(--accent)}
+.msg{min-height:1.5em;margin:12px 0 0;font-weight:600}
+.msg.bad{color:var(--muted)}.msg.good{color:var(--ok)}
+.fact{margin:10px 0 0;color:var(--ink)}
+.hint{color:var(--muted)}
+.tiles{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 16px}
+.tiles span{width:34px;height:40px;display:grid;place-items:center;border:1.5px solid var(--accent);border-radius:6px;font:800 1.1rem Fraunces,Georgia,serif}
+.tiles i{width:14px}
+details{margin:0 0 16px;color:var(--muted)}summary{cursor:pointer;font-weight:600;color:var(--accent)}
+details ol{margin:8px 0 0;padding-left:22px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Predore: la mappa degli indovinelli</h1>
+  <p>Sei luoghi sulla riva occidentale del Lago d'Iseo. Tocca un punto, leggi l'indovinello e scopri di che luogo si tratta.</p>
+</header>
+<main>
+  <div class="map">
+    <svg viewBox="0 0 600 540" role="img" aria-label="Mappa schematica di Predore con sei luoghi">
+      <rect width="600" height="540" class="hill"/>
+      <path class="contour" d="M0 120 C80 90 160 60 230 0"/>
+      <path class="contour" d="M0 230 C90 190 190 150 290 70 S340 20 350 0"/>
+      <path class="contour" d="M0 350 C100 320 200 270 300 200 S330 120 345 50"/>
+      <path class="lake" d="M335 540 C340 440 362 395 352 335 S338 210 366 110 S372 30 374 0 L600 0 L600 540Z"/>
+      <path class="wave" d="M420 90 q15 -9 30 0 t30 0"/><path class="wave" d="M470 250 q15 -9 30 0 t30 0"/><path class="wave" d="M410 400 q15 -9 30 0 t30 0"/>
+      <path class="shore" d="M335 540 C340 440 362 395 352 335 S338 210 366 110 S372 30 374 0"/>
+      <path class="steps" d="M262 262 C240 220 200 180 168 128"/>
+      <text class="lbl big" x="470" y="170">Lago d'Iseo</text>
+      <text class="lbl" x="470" y="190">(Sebino)</text>
+      <text class="lbl" x="30" y="520">verso Sarnico</text>
+      <text class="lbl" x="30" y="30">verso Tavernola</text>
+      <g id="pins"></g>
+    </svg>
+  </div>
+  <section class="panel" aria-live="polite" id="panel"></section>
+</main>
+<script>
+var P=[
+{id:"giorgio",n:"1",x:300,y:455,name:"Chiesetta di San Giorgio",
+ r:"Sono la prima chiesa che incontri arrivando da Sarnico. Sono piccolissima, romanica, con un campanile basso a due livelli. Dentro, nella mia unica navata, un cavaliere affronta un drago.",
+ k:["giorgio"],f:"Costruita nel XIII secolo, conserva ancora un San Giorgio e una Madonna del Quattrocento."},
+{id:"lungolago",n:"2",x:338,y:330,name:"Il lungolago",
+ r:"Non sono una strada e non sono una spiaggia. Sono il margine fra il paese e l'acqua, dove i Romani avevano il loro porto. Oggi qui si cammina guardando l'isola più grande d'Europa tra i laghi.",
+ k:["lungolago","lago","porto","riva"],f:"Il tratto sul lago è legato al porto antico che rese Predore un centro attivo in epoca romana."},
+{id:"villa",n:"3",x:326,y:262,name:"La villa romana",
+ r:"Tra il I secolo a.C. e il IV secolo d.C. ero una grande dimora decorata con mosaici e affreschi, con tanto di terme. Oggi restano le fondamenta, e in certi periodi si può visitarmi.",
+ k:["villa","romana","romani","romano","terme"],f:"Il sito archeologico viene aperto al pubblico in alcuni periodi dell'anno, in genere nei fine settimana."},
+{id:"torre",n:"4",x:318,y:195,name:"Torre Micideno Foresti",
+ r:"Vigilo il lago dal Medioevo e appartenevo a una famiglia guelfa. Il terreno ha ceduto e mi ha spaccata per il lungo, ma sono ancora in piedi. Chi sono?",
+ k:["torre","foresti","micideno"],f:"La torre si affaccia sul Sebino ed è spezzata per il lungo a causa dell'affondamento del terreno."},
+{id:"salvatore",n:"5",x:262,y:262,name:"Chiesa di San Salvatore",
+ r:"Sto nel cuore del paese, vicino al municipio. Il mio portale è sormontato da un frontone che poggia su colonne slanciate. Il mio nome è quello di chi salva.",
+ k:["salvatore","parrocchiale","parrocchia"],f:"È la chiesa parrocchiale, in pieno centro vicino al Comune."},
+{id:"santuario",n:"6",x:168,y:128,name:"Santuario della Madonna della Neve",
+ r:"Per arrivare da me servono 288 gradini, e il fiato lo senti. In cambio ti offro uno dei panorami più belli sul lago. Il mio nome parla di inverno, ma sono anche dedicato a un Papa.",
+ k:["neve","gregorio","santuario","madonna"],f:"Costruito nel Quattrocento a metà collina, è detto anche santuario di San Gregorio."}
+];
+var done={},cur=null,pins=document.getElementById("pins"),panel=document.getElementById("panel");
+function norm(s){return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim()}
+P.forEach(function(p){
+ var g=document.createElementNS("http://www.w3.org/2000/svg","g");
+ g.setAttribute("class","pin");g.setAttribute("tabindex","0");g.setAttribute("role","button");
+ g.setAttribute("aria-label","Luogo "+p.n+": apri l'indovinello");
+ g.innerHTML='<circle class="ring" cx="'+p.x+'" cy="'+p.y+'" r="25"/><circle class="b" cx="'+p.x+'" cy="'+p.y+'" r="16"/><text x="'+p.x+'" y="'+(p.y+6)+'">?</text>';
+ g.onclick=function(){open(p)};
+ g.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();open(p)}};
+ p.el=g;pins.appendChild(g);
+});
+function count(){return Object.keys(done).length}
+function home(){panel.innerHTML='<p class="score">Risolti: '+count()+' su '+P.length+'</p><h2>Da dove cominci?</h2><p class="hint">Tocca uno dei punti gialli sulla mappa. Il nome del luogo resta nascosto finché non risolvi l\'indovinello.</p>'}
+function open(p){
+ cur=p;P.forEach(function(q){q.el.classList.toggle("sel",q===p)});
+ var s='<p class="score">Risolti: '+count()+' su '+P.length+'</p>';
+ if(done[p.id]){
+  s+='<h2>'+p.n+'. '+p.name+'</h2><p class="riddle">'+p.r+'</p><p class="msg good">Risolto.</p><p class="fact">'+p.f+'</p>';
+ }else{
+  s+='<h2>Luogo misterioso</h2><p class="riddle">'+p.r+'</p><div class="row"><input id="g" type="text" placeholder="Che luogo è?" aria-label="La tua risposta" autocomplete="off"><button id="ok">Rispondi</button><button id="rv" class="ghost">Rivela</button></div><p class="msg" id="m"></p>';
+ }
+ panel.innerHTML=s;
+ if(!done[p.id]){
+  var g=document.getElementById("g"),m=document.getElementById("m");
+  function check(){
+   var v=norm(g.value);if(!v)return;
+   var hit=p.k.some(function(k){return v.indexOf(k)>-1});
+   if(hit)solve(p);else{m.className="msg bad";m.textContent="Non è questo. Rileggi l'indovinello e riprova."}
+  }
+  document.getElementById("ok").onclick=check;
+  g.onkeydown=function(e){if(e.key==="Enter")check()};
+  document.getElementById("rv").onclick=function(){solve(p)};
+ }
+}
+function solve(p){done[p.id]=1;p.el.classList.add("done");p.el.querySelector("text").textContent="\u2713";open(p);
+ if(count()===P.length){panel.insertAdjacentHTML("beforeend",'<p class="msg good">Hai completato il giro di Predore. Ma manca ancora un indovinello.</p><button id="fin">Vai al finale</button>');document.getElementById("fin").onclick=finale}}
+var TAPPE=["Malga Labeseben","Non c'è altra scelta (Park Chan-wook)","Carnival","La vita del bucaniere","La pipì nella natura","River Bar","Zone (Brescia)","Castello di Bevilacqua","Traghetto Lago d'Iseo","Trenino del Bernina"];
+var CODICE="415",hn=0;
+var AIUTI=["Le cifre sono i numeri delle tappe nell'elenco.","Una tappa ha a che fare con il cibo, un'altra con un'attività fatta in pubblico, davanti agli altri.","La prima cifra è il numero della prima tappa che hai trovato."];
+function finale(){
+ P.forEach(function(q){q.el.classList.remove("sel")});
+ panel.innerHTML='<p class="score">Indovinello finale</p><h2>Il lucchetto</h2>'+
+ '<p class="riddle">Il lucchetto aspetta tre cifre.<br><br>Prima cifra: corrisponde al numero del primo indovinello che hai trovato.<br><br>Seconda cifra: è il numero di un indovinello che riguarda il cibo.<br><br>Terza cifra: è il numero di un indovinello legato a un\'attività in pubblico.</p>'+
+ '<details open><summary>Le tue dieci tappe</summary><ol>'+TAPPE.map(function(t){return "<li>"+t+"</li>"}).join("")+'</ol></details>'+
+ '<div class="row"><input id="a" type="text" inputmode="numeric" maxlength="3" placeholder="Tre cifre" aria-label="Combinazione del lucchetto" autocomplete="off"><button id="ok2">Apri</button><button id="h2" class="ghost">Aiuto</button></div><p class="msg" id="m2"></p>';
+ var a=document.getElementById("a"),m=document.getElementById("m2");
+ function chk(){
+  var v=a.value.replace(/\D/g,"");if(!v)return;
+  if(v.length<3){m.className="msg bad";m.textContent="Servono tre cifre.";return}
+  if(v===CODICE){m.className="msg good";m.textContent="Il lucchetto si apre! Dentro c'è una busta con la tua meta."}
+  else{m.className="msg bad";m.textContent="Il lucchetto non si apre. Ricontrolla le tre tappe e i calcoli."}
+ }
+ document.getElementById("ok2").onclick=chk;
+ a.onkeydown=function(e){if(e.key==="Enter")chk()};
+ document.getElementById("h2").onclick=function(){m.className="msg bad";m.textContent=AIUTI[hn%AIUTI.length];hn++};
+}
+home();
+</script>
+</body>
+</html>
